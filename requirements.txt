@@ -1,0 +1,18 @@
+# --- Web ---
+fastapi==0.115.6
+uvicorn[standard]==0.30.6
+gunicorn==22.0.0
+
+# --- Elasticsearch ---
+elasticsearch[async]==8.15.1
+
+# --- Redis ---
+redis==5.1.1
+
+# --- Config / Models ---
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# --- Performance ---
+orjson==3.10.12
+python-dotenv~=1.2.1
