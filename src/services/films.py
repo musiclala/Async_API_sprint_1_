@@ -54,7 +54,6 @@ class FilmService:
             raise
 
         src = doc.get("_source") or {}
-        # Важно: добавим id в source, чтобы Pydantic алиасы сработали стабильно
         src["id"] = doc.get("_id", str(film_id))
 
         film = Film.model_validate(src)
