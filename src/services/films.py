@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional
 from uuid import UUID
 
 import orjson
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from elasticsearch import AsyncElasticsearch
 from redis.asyncio import Redis
 
-from src.core.config import ELASTIC_INDEX, CACHE_TTL_SECONDS
+from src.core.config import settings
 from src.models.film import Film, FilmShort
 
 
@@ -16,9 +15,9 @@ def _cache_key(prefix: str, *parts: str) -> str:
     return f"{prefix}:{safe}"
 
 
-def _build_sort(sort: Optional[str]) -> list[dict]:
+def _build_sort(sort: str | None) -> list[dict]:
     if not sort:
-        return [{"imdb_rating": {"order": "desc"}}]  # дефолт для главной
+        return [{"imdb_rating": {"order": "desc"}}]
 
     order = "asc"
     field = sort
@@ -36,39 +35,41 @@ class FilmService:
     def __init__(self, es: AsyncElasticsearch, redis: Redis):
         self.es = es
         self.redis = redis
-        self.index = ELASTIC_INDEX
-        self.ttl = CACHE_TTL_SECONDS
+        self.index = settings.elastic_index
+        self.ttl = settings.cache_ttl_seconds
 
     async def get_by_id(self, film_id: UUID) -> Film:
         key = _cache_key("films:detail", str(film_id))
+
         try:
             cached = await self.redis.get(key)
         except Exception:
             cached = None
+
         if cached:
             return Film.model_validate(orjson.loads(cached))
 
-        try:
-            doc = await self.es.get(index=self.index, id=str(film_id))
-        except NotFoundError:
-            raise
-
+        doc = await self.es.get(index=self.index, id=str(film_id))
         src = doc.get("_source") or {}
         src["id"] = doc.get("_id", str(film_id))
 
         film = Film.model_validate(src)
+
         try:
             await self.redis.setex(key, self.ttl, orjson.dumps(film.model_dump(by_alias=True)))
         except Exception:
             pass
+
         return film
 
     async def search(self, query: str, page_number: int, page_size: int) -> list[FilmShort]:
-        key = _cache_key("films:search", query, f"p{page_number}", f"s{page_size}")
+        key = _cache_key("films:search", query.strip(), f"p{page_number}", f"s{page_size}")
+
         try:
             cached = await self.redis.get(key)
         except Exception:
             cached = None
+
         if cached:
             data = orjson.loads(cached)
             return [FilmShort.model_validate(x) for x in data]
@@ -94,8 +95,8 @@ class FilmService:
             src = h.get("_source") or {}
             src["id"] = h.get("_id")
             items.append(FilmShort.model_validate(src))
-        try:
 
+        try:
             await self.redis.setex(
                 key,
                 self.ttl,
@@ -103,14 +104,15 @@ class FilmService:
             )
         except Exception:
             pass
+
         return items
 
     async def list(
         self,
         page_number: int,
         page_size: int,
-        sort: Optional[str] = None,
-        genre: Optional[UUID] = None,
+        sort: str | None = None,
+        genre: UUID | None = None,
     ) -> list[FilmShort]:
         sort_es = _build_sort(sort)
 
@@ -121,15 +123,16 @@ class FilmService:
             f"p{page_number}",
             f"s{page_size}",
         )
+
         try:
             cached = await self.redis.get(key)
         except Exception:
             cached = None
+
         if cached:
             data = orjson.loads(cached)
             return [FilmShort.model_validate(x) for x in data]
 
-        query: dict
         if genre:
             query = {"term": {"genre.id": str(genre)}}
         else:
@@ -151,6 +154,7 @@ class FilmService:
             src = h.get("_source") or {}
             src["id"] = h.get("_id")
             items.append(FilmShort.model_validate(src))
+
         try:
             await self.redis.setex(
                 key,
@@ -159,4 +163,5 @@ class FilmService:
             )
         except Exception:
             pass
+
         return items

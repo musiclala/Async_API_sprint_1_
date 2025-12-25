@@ -1,6 +1,6 @@
 import redis.asyncio as redis
 
-from src.core.config import REDIS_HOST, REDIS_PORT
+from src.core.config import settings
 
 rds: redis.Redis | None = None
 
@@ -12,8 +12,8 @@ async def get_redis() -> redis.Redis:
 async def init_redis() -> None:
     global rds
     rds = redis.Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
+        host=settings.redis_host,
+        port=settings.redis_port,
         decode_responses=False,
     )
 

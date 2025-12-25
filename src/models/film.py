@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from src.models.genre import Genre
@@ -9,7 +8,7 @@ from src.models.person import Person
 class FilmShort(BaseModel):
     uuid: UUID = Field(alias="id")
     title: str
-    imdb_rating: Optional[float] = None
+    imdb_rating: float | None = None
 
     model_config = {"populate_by_name": True}
 
@@ -17,12 +16,12 @@ class FilmShort(BaseModel):
 class Film(BaseModel):
     uuid: UUID = Field(alias="id")
     title: str
-    imdb_rating: Optional[float] = None
-    description: Optional[str] = None
+    imdb_rating: float | None = None
+    description: str = None
 
-    genre: List[Genre] = []
-    actors: List[Person] = []
-    writers: List[Person] = []
-    directors: List[Person] = []
+    genre: list[Genre] = Field(default_factory=list)
+    actors: list[Person] = Field(default_factory=list)
+    writers: list[Person] = Field(default_factory=list)
+    directors: list[Person] = Field(default_factory=list)
 
     model_config = {"populate_by_name": True}
