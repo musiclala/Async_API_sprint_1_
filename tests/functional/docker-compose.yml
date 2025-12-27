@@ -1,0 +1,65 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200 >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+
+  redis:
+    image: redis:7.2-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+
+  api:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    environment:
+      PROJECT_NAME: movies-api-tests
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      ELASTIC_HOST: http://elasticsearch:9200
+      ELASTIC_INDEX: movies
+      CACHE_TTL_SECONDS: 300
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/openapi.json >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+
+  tests:
+    image: python:3.12-slim
+    working_dir: /tests
+    volumes:
+      - ./:/tests
+    environment:
+      API_URL: http://api:8000
+      ES_URL: http://elasticsearch:9200
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ES_MOVIES_INDEX: movies
+      PYTHONPATH: /tests
+    depends_on:
+      api:
+        condition: service_healthy
+    command: >
+      sh -c "
+      pip install --no-cache-dir -r requirements.txt &&
+      pytest -q --disable-warnings --maxfail=1
+      "

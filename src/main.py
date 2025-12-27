@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from src.api.v1 import films
 from src.db import elastic, redis
 from src.core.config import settings
+from fastapi.responses import ORJSONResponse
 
 
 @asynccontextmanager
@@ -15,12 +16,23 @@ async def lifespan(app: FastAPI):
     await redis.close_redis()
     await elastic.close_elastic()
 
-
 app = FastAPI(
     title=settings.project_name,
+    description=(
+        "Асинхронный API онлайн-кинотеатра.\n\n"
+        "В текущей итерации реализованы эндпоинты для фильмов: список, поиск, детали."
+    ),
+    version="1.0.0",
     docs_url="/api/openapi",
     openapi_url="/api/openapi.json",
-    lifespan=lifespan,
+    default_response_class=ORJSONResponse,
+    contact={
+        "name": "Support",
+        "email": "support@example.com",
+    },
+    license_info={
+        "name": "MIT",
+    },
 )
 
 app.include_router(films.router, prefix="/api/v1/films", tags=["films"])

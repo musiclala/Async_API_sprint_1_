@@ -1,0 +1,19 @@
+{
+  "settings": { "refresh_interval": "1s" },
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "id": { "type": "keyword" },
+      "title": { "type": "text", "fields": { "raw": { "type": "keyword" } } },
+      "description": { "type": "text" },
+      "imdb_rating": { "type": "float" },
+      "genre": {
+        "type": "nested",
+        "properties": {
+          "id": { "type": "keyword" },
+          "name": { "type": "keyword" }
+        }
+      }
+    }
+  }
+}
