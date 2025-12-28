@@ -3,14 +3,15 @@ import pytest
 from settings import settings
 from utils.redis_keys import keys_count
 
+import pytest
 
-@pytest.mark.asyncio
+pytestmark = pytest.mark.asyncio
+
 async def test_search_validation_missing_query(aiohttp_session):
     async with aiohttp_session.get(f"{settings.api_url}{settings.films_search_path}") as resp:
         assert resp.status == 422
 
 
-@pytest.mark.asyncio
 async def test_search_validation_empty_query(aiohttp_session):
     async with aiohttp_session.get(
         f"{settings.api_url}{settings.films_search_path}",
@@ -19,7 +20,6 @@ async def test_search_validation_empty_query(aiohttp_session):
         assert resp.status in (422, 400)
 
 
-@pytest.mark.asyncio
 async def test_search_returns_only_n(aiohttp_session):
     async with aiohttp_session.get(
         f"{settings.api_url}{settings.films_search_path}",
@@ -30,7 +30,6 @@ async def test_search_returns_only_n(aiohttp_session):
         assert len(data) == 1
 
 
-@pytest.mark.asyncio
 async def test_search_by_phrase(aiohttp_session):
     async with aiohttp_session.get(
         f"{settings.api_url}{settings.films_search_path}",
@@ -41,7 +40,6 @@ async def test_search_by_phrase(aiohttp_session):
         assert any(x["title"] == "Alpha Movie" for x in data)
 
 
-@pytest.mark.asyncio
 async def test_search_cache_redis(aiohttp_session, redis_client):
     await redis_client.flushdb()
 

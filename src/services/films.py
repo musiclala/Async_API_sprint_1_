@@ -4,17 +4,17 @@ from uuid import UUID
 from elasticsearch import NotFoundError
 
 from src.models.film import Film, FilmShort
-from src.storage.elastic import ElasticFilmRepository
-from src.storage.redis_cache import RedisCacheRepository
+from src.storage.base import AbstractFilmStorage
+from src.storage.cache_base import AbstractCache
 
 
 class FilmService:
     def __init__(
-        self,
-        repo: ElasticFilmRepository,
-        cache: RedisCacheRepository,
+            self,
+            storage: AbstractFilmStorage,
+            cache: AbstractCache,
     ):
-        self.repo = repo
+        self.storage = storage
         self.cache = cache
 
     async def get_by_id(self, film_id: UUID) -> Film:
@@ -25,7 +25,7 @@ class FilmService:
             return Film.model_validate(cached)
 
         try:
-            src = await self.repo.get_by_id(film_id)
+            src = await self.storage.get_by_id(film_id)
         except NotFoundError:
             raise
 
@@ -47,7 +47,7 @@ class FilmService:
         if cached:
             return [FilmShort.model_validate(x) for x in cached]
 
-        items_src = await self.repo.search(
+        items_src = await self.storage.search(
             query=query,
             page_number=page_number,
             page_size=page_size,
@@ -79,7 +79,7 @@ class FilmService:
         if cached:
             return [FilmShort.model_validate(x) for x in cached]
 
-        items_src = await self.repo.list(
+        items_src = await self.storage.list(
             page_number=page_number,
             page_size=page_size,
             sort=sort,

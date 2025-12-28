@@ -33,6 +33,7 @@ app = FastAPI(
     license_info={
         "name": "MIT",
     },
+    lifespan=lifespan,
 )
 
 app.include_router(films.router, prefix="/api/v1/films", tags=["films"])

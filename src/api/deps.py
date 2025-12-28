@@ -12,10 +12,10 @@ from src.storage.elastic import ElasticFilmRepository
 from src.storage.redis_cache import RedisCacheRepository
 
 
-async def get_film_service(
-    es=Depends(get_elastic),
-    redis=Depends(get_redis),
+def get_film_service(
+    es: AsyncElasticsearch = Depends(get_elastic),
+    redis: Redis = Depends(get_redis),
 ) -> FilmService:
-    repo = ElasticFilmRepository(es)
+    storage = ElasticFilmRepository(es)
     cache = RedisCacheRepository(redis)
-    return FilmService(repo=repo, cache=cache)
+    return FilmService(storage=storage, cache=cache)

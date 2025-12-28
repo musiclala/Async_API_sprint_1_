@@ -6,6 +6,7 @@ from typing import Optional
 from elasticsearch import AsyncElasticsearch
 
 from src.core.config import settings
+from src.storage.base import AbstractFilmStorage
 
 
 def build_sort(sort: Optional[str]) -> list[dict]:
@@ -24,7 +25,7 @@ def build_sort(sort: Optional[str]) -> list[dict]:
     return [{field: {"order": order}}]
 
 
-class ElasticFilmRepository:
+class ElasticFilmRepository(AbstractFilmStorage):
     def __init__(self, es: AsyncElasticsearch):
         self.es = es
         self.index = settings.elastic_index

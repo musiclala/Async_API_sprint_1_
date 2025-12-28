@@ -3,15 +3,16 @@ import pytest
 from settings import settings
 from utils.redis_keys import keys_count
 
+import pytest
 
-@pytest.mark.asyncio
+pytestmark = pytest.mark.asyncio
+
 async def test_film_details_validation_bad_uuid(aiohttp_session):
     url = f"{settings.api_url}{settings.film_details_path.format(film_id='not-a-uuid')}"
     async with aiohttp_session.get(url) as resp:
         assert resp.status == 422
 
 
-@pytest.mark.asyncio
 async def test_film_details_found(aiohttp_session):
     film_id = "11111111-1111-1111-1111-111111111111"
     url = f"{settings.api_url}{settings.film_details_path.format(film_id=film_id)}"
@@ -22,7 +23,6 @@ async def test_film_details_found(aiohttp_session):
         assert data["title"] == "Zeta Movie"
 
 
-@pytest.mark.asyncio
 async def test_film_details_not_found(aiohttp_session):
     film_id = "00000000-0000-0000-0000-000000000000"
     url = f"{settings.api_url}{settings.film_details_path.format(film_id=film_id)}"
@@ -30,7 +30,6 @@ async def test_film_details_not_found(aiohttp_session):
         assert resp.status == 404
 
 
-@pytest.mark.asyncio
 async def test_film_details_cache_redis(aiohttp_session, redis_client):
     await redis_client.flushdb()
 

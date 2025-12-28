@@ -2,8 +2,11 @@ import pytest
 
 from settings import settings
 
+import pytest
 
-@pytest.mark.asyncio
+pytestmark = pytest.mark.asyncio
+
+
 async def test_films_list_validation_page_size_too_big(aiohttp_session):
     async with aiohttp_session.get(
         f"{settings.api_url}{settings.films_list_path}",
@@ -12,7 +15,6 @@ async def test_films_list_validation_page_size_too_big(aiohttp_session):
         assert resp.status == 422
 
 
-@pytest.mark.asyncio
 async def test_films_list_returns_all(aiohttp_session):
     async with aiohttp_session.get(
         f"{settings.api_url}{settings.films_list_path}",
@@ -25,7 +27,6 @@ async def test_films_list_returns_all(aiohttp_session):
         assert {"uuid", "title", "imdb_rating"} <= set(data[0].keys())
 
 
-@pytest.mark.asyncio
 async def test_films_list_returns_only_n(aiohttp_session):
     async with aiohttp_session.get(
         f"{settings.api_url}{settings.films_list_path}",

@@ -8,11 +8,13 @@ from redis.asyncio import Redis
 from src.core.backoff import expo_backoff
 from src.core.config import settings
 
+from src.storage.cache_base import AbstractCache
 
-class RedisCacheRepository:
+
+class RedisCacheRepository(AbstractCache):
     def __init__(self, redis: Redis):
         self.redis = redis
-        self.ttl = settings.elastic_ttl
+        self.ttl = settings.cache_ttl_seconds
 
     @staticmethod
     def make_key(prefix: str, *parts: Any) -> str:
