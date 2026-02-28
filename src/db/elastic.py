@@ -13,7 +13,7 @@ async def get_elastic() -> AsyncElasticsearch:
 @expo_backoff(exceptions=(Exception,), start_sleep_time=0.2, max_retries=7)
 async def init_elastic() -> None:
     global es
-    es = AsyncElasticsearch(hosts=[settings.elastic_host])
+    es = AsyncElasticsearch(hosts=[settings.elastic_url])
     await es.info()
 
 

@@ -13,6 +13,9 @@ redis==5.1.1
 pydantic==2.10.3
 pydantic-settings==2.7.0
 
+# --- Auth contract (JWT verification, no call to Auth service) ---
+PyJWT==2.10.1
+
 # --- Performance ---
 orjson==3.10.12
 python-dotenv~=1.2.1

@@ -2,9 +2,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.api.v1 import films
+from src.api.v1 import films, auth as auth_api
 from src.db import elastic, redis
 from src.core.config import settings
+from src.middleware import RequestIdMiddleware
 from fastapi.responses import ORJSONResponse
 
 
@@ -23,8 +24,9 @@ app = FastAPI(
         "В текущей итерации реализованы эндпоинты для фильмов: список, поиск, детали."
     ),
     version="1.0.0",
-    docs_url="/api/openapi",
-    openapi_url="/api/openapi.json",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
     default_response_class=ORJSONResponse,
     contact={
         "name": "Support",
@@ -36,4 +38,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(RequestIdMiddleware)
+app.include_router(auth_api.router, prefix="/api/v1", tags=["auth"])
 app.include_router(films.router, prefix="/api/v1/films", tags=["films"])

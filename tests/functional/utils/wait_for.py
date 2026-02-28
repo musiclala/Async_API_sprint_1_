@@ -37,7 +37,7 @@ async def wait_for_api(api_url: str, timeout_s: int = 60) -> None:
     async with aiohttp.ClientSession() as session:
         for _ in range(timeout_s):
             try:
-                async with session.get(f"{api_url}/api/openapi.json", timeout=aiohttp.ClientTimeout(total=2)) as resp:
+                async with session.get(f"{api_url}/openapi.json", timeout=aiohttp.ClientTimeout(total=2)) as resp:
                     if resp.status < 500:
                         return
             except Exception:

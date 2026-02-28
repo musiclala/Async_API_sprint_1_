@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from uuid import UUID
 
 from elasticsearch import NotFoundError
@@ -7,22 +8,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.api.deps import get_film_service
 from src.api.v1.params import FilmListParams, Pagination, films_list_params, pagination_params
+from src.core.auth import get_current_user_required
 from src.models.film import Film, FilmShort
 from src.services.films import FilmService
 
 router = APIRouter()
 
 
-@router.get(
-    "",
-    response_model=list[FilmShort],
-    summary="Список фильмов",
-    description="Возвращает список фильмов с пагинацией, сортировкой и фильтрацией по жанру.",
-)
+@router.get("", response_model=list[FilmShort], summary="Список фильмов")
 async def films_list(
     pag: Pagination = Depends(pagination_params),
     params: FilmListParams = Depends(films_list_params),
     service: FilmService = Depends(get_film_service),
+    user: dict[str, Any] = Depends(get_current_user_required),
 ) -> list[FilmShort]:
     try:
         return await service.list(
@@ -37,16 +35,12 @@ async def films_list(
         raise HTTPException(status_code=503, detail="Search index is not ready")
 
 
-@router.get(
-    "/search",
-    response_model=list[FilmShort],
-    summary="Поиск фильмов",
-    description="Поиск по названию/описанию. Поддерживает пагинацию.",
-)
+@router.get("/search", response_model=list[FilmShort], summary="Поиск фильмов")
 async def films_search(
     query: str = Query(..., min_length=1),
     pag: Pagination = Depends(pagination_params),
     service: FilmService = Depends(get_film_service),
+    user: dict[str, Any] = Depends(get_current_user_required),
 ) -> list[FilmShort]:
     try:
         return await service.search(query=query, page_number=pag.page_number, page_size=pag.page_size)
@@ -54,15 +48,11 @@ async def films_search(
         raise HTTPException(status_code=503, detail="Search index is not ready")
 
 
-@router.get(
-    "/{film_id}",
-    response_model=Film,
-    summary="Детали фильма",
-    description="Возвращает полную информацию о фильме по UUID.",
-)
+@router.get("/{film_id}", response_model=Film, summary="Детали фильма")
 async def film_details(
     film_id: UUID,
     service: FilmService = Depends(get_film_service),
+    user: dict[str, Any] = Depends(get_current_user_required),
 ) -> Film:
     try:
         return await service.get_by_id(film_id)
